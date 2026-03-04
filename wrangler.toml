@@ -4,3 +4,6 @@ compatibility_date = "2024-03-04"
 
 [observability]
 enabled = true
+
+[vars]
+ALLOWED_ORIGINS = "https://justanimes.to,https://www.justanime.to,http://localhost:5173"

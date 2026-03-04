@@ -1,5 +1,4 @@
 const CONFIG = {
-    ALLOWED_ORIGINS: ['https://justanimes.to', 'http://localhost:5173'], // Set origins here if needed, or leave empty for '*'
     DEFAULT_REFERER: 'https://kwik.cx',
     ANIMEPAHE_BASE: 'https://animepahe.si',
     DEFAULT_USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -16,11 +15,11 @@ const CONFIG = {
 
 const cookieJar = new Map();
 
-function isOriginAllowed(origin) {
-    if (CONFIG.ALLOWED_ORIGINS.length === 0 || CONFIG.ALLOWED_ORIGINS.includes("*")) {
+function isOriginAllowed(origin, allowedOrigins) {
+    if (!allowedOrigins || allowedOrigins.length === 0 || allowedOrigins.includes("*")) {
         return true;
     }
-    return CONFIG.ALLOWED_ORIGINS.includes(origin);
+    return allowedOrigins.includes(origin);
 }
 
 function buildUpstreamHeaders(request, url, headersParam) {
@@ -157,13 +156,15 @@ export default {
         const url = new URL(request.url);
         const origin = request.headers.get('origin') || "";
 
+        const allowedOrigins = env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',').map(o => o.trim()) : [];
+
         if (request.method === "OPTIONS") {
             const h = new Headers();
             setCorsHeaders(request, h);
             return new Response(null, { headers: h });
         }
 
-        if (!isOriginAllowed(origin)) {
+        if (!isOriginAllowed(origin, allowedOrigins)) {
             return new Response(`Origin "${origin}" blacklisted.`, { status: 403 });
         }
 

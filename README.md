@@ -4,7 +4,7 @@ A lightweight M3U8 proxy for Express and Cloudflare Workers. Handles `Referer`, 
 
 ## 🚀 Cloudflare Worker (Recommended)
 
-1.  **Configure**: Edit `CONFIG` in `cf_worker.js`.
+1.  **Configure**: Edit `ALLOWED_ORIGINS` in `wrangler.toml`. Other settings can be modified in `cf_worker.js`.
 2.  **Deploy**:
     ```bash
     npx wrangler deploy
