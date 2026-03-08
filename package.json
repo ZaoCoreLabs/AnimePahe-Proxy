@@ -26,6 +26,7 @@
   "homepage": "https://github.com/tejaspanchall/AnimePahe-M3U8-Proxy",
   "dependencies": {
     "cloudscraper": "^4.6.0",
+    "dotenv": "^17.3.1",
     "express": "^4.19.2"
   }
 }
