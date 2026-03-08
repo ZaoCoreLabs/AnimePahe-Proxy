@@ -1,0 +1,14 @@
+services:
+  animepahe-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/zaocorelabs/animepahe-proxy:latest
+    container_name: animekai-proxy
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - ALLOWED_ORIGINS=*
+      - NODE_ENV=production
+    restart: unless-stopped
