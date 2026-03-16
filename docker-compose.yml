@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: ghcr.io/zaocorelabs/animepahe-proxy:latest
-    container_name: animekai-proxy
+    container_name: animepahe-proxy
     ports:
       - "3000:3000"
     environment:
