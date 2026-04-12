@@ -22,6 +22,20 @@ function createSafeSender(res) {
     };
 }
 
+function getRequestOrigin(req) {
+    if (req.headers.origin) return req.headers.origin;
+
+    if (req.headers.referer) {
+        try {
+            return new URL(req.headers.referer).origin;
+        } catch {
+            return "";
+        }
+    }
+
+    return "";
+}
+
 function isOriginAllowed(origin) {
     if (CONFIG.ALLOWED_ORIGINS.includes("*")) {
         return true;
@@ -122,17 +136,27 @@ function updateCookieJar(url, targetResponse) {
 }
 
 function setCorsHeaders(req, res) {
-    const origin = req.headers.origin || '*';
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', CONFIG.CORS.ALLOW_METHODS);
-    res.setHeader('Access-Control-Allow-Headers', CONFIG.CORS.ALLOW_HEADERS);
-    res.setHeader('Access-Control-Expose-Headers', CONFIG.CORS.EXPOSE_HEADERS);
-    res.setHeader('Access-Control-Allow-Credentials', CONFIG.CORS.ALLOW_CREDENTIALS);
-    res.setHeader('Cache-Control', CONFIG.CACHE_CONTROL);
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('X-Proxy-By', 'm3u8-proxy');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
+    const origin = getRequestOrigin(req);
+
+    if (isOriginAllowed(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+    }
+
+    res.setHeader("Vary", "Origin");
+
+    res.setHeader("Access-Control-Allow-Methods", CONFIG.CORS.ALLOW_METHODS);
+    res.setHeader("Access-Control-Allow-Headers", CONFIG.CORS.ALLOW_HEADERS);
+    res.setHeader("Access-Control-Expose-Headers", CONFIG.CORS.EXPOSE_HEADERS);
+
+    if (CONFIG.CORS.ALLOW_CREDENTIALS) {
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+
+    res.setHeader("Cache-Control", CONFIG.CACHE_CONTROL);
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("X-Proxy-By", "m3u8-proxy");
+    res.setHeader("X-Content-Type-Options", "nosniff");
 }
 
 function generateProxyUrl(targetUrl, headersParam) {
@@ -169,8 +193,13 @@ function proxyPlaylistContent(content, url, headersParam) {
     }).join("\n");
 }
 
+app.options("*", (req, res) => {
+    setCorsHeaders(req, res);
+    res.sendStatus(200);
+});
+
 app.get('/', (req, res) => {
-    const origin = req.headers.origin || "";
+    const origin = getRequestOrigin(req);
     if (!isOriginAllowed(origin)) {
         res.status(403).send(`The origin "${origin}" was blacklisted by the operator of this proxy.`);
         return;
@@ -180,7 +209,7 @@ app.get('/', (req, res) => {
 
 app.get("/m3u8-proxy", async (req, res) => {
     const safeSend = createSafeSender(res);
-    const origin = req.headers.origin || "";
+    const origin = getRequestOrigin(req);
 
     if (!isOriginAllowed(origin)) {
         return safeSend(403, `The origin "${origin}" was blacklisted by the operator of this proxy.`);
@@ -262,7 +291,7 @@ app.get("/m3u8-proxy", async (req, res) => {
 
 app.get("/subs-proxy", async (req, res) => {
     const safeSend = createSafeSender(res);
-    const origin = req.headers.origin || "";
+    const origin = getRequestOrigin(req);
 
     if (!isOriginAllowed(origin)) {
         return safeSend(403, `The origin "${origin}" was blacklisted.`);
